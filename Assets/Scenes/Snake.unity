@@ -1063,7 +1063,8 @@ MonoBehaviour:
   m_CursorLockBehavior: 1
   m_ScrollDeltaPerTick: 6
   m_XRTrackingOrigin: {fileID: 0}
-  m_TrackedDeviceDragThresholdMultiplier: 2--- !u!114 &1509251188
+  m_TrackedDeviceDragThresholdMultiplier: 2
+--- !u!114 &1509251188
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
