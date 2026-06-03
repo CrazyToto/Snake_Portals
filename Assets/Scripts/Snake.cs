@@ -1,6 +1,7 @@
 using System.Collections;                    //Impotiert Libarys
 using System.Collections.Generic;            //.
 using UnityEngine;     
+using UnityEngine.InputSystem;
 
 
 public class Snake : MonoBehaviour  //Klasse Snake
@@ -16,40 +17,44 @@ public class Snake : MonoBehaviour  //Klasse Snake
         ResetState();   // ruft die Funktion ResetState auf
     }
 
-    private void Update()   // wird am Anfang jedes Frames ausgeführt
+    private void Update()   // wird am Anfang jedes Frames ausgefuehrt
     {
-        if (Input.GetKeyDown(KeyCode.W))    // Prüft den Tastendruck W
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null)
         {
-            if (_direction != Vector2.down) // Prüft, dass die Schlange nicht in die entgegengesetzte Richtung gedreht wird
-                                            // und somit mit sich selbst kollidieren würde
+            return;
+        }
+
+        if (keyboard.wKey.wasPressedThisFrame || keyboard.upArrowKey.wasPressedThisFrame)    // Prueft den Tastendruck W oder Pfeil nach oben
+        {
+            if (_direction != Vector2.down) // Prueft, dass die Schlange nicht in die entgegengesetzte Richtung gedreht wird
+                                            // und somit mit sich selbst kollidieren wuerde
             {
                 _direction = Vector2.up;    // setzt die Bewegungsrichtung nach oben
             }
 
-        } else if (Input.GetKeyDown(KeyCode.S)) // Prüft den Tastendruck S 
+        } else if (keyboard.sKey.wasPressedThisFrame || keyboard.downArrowKey.wasPressedThisFrame) // Prueft den Tastendruck S oder Pfeil nach unten
         {
-            if (_direction != Vector2.up)   // Prüft, dass die Schlange nicht in die entgegengesetzte Richtung fährt und somit mit sich selbst kollidieren würde
+            if (_direction != Vector2.up)   // Prueft, dass die Schlange nicht in die entgegengesetzte Richtung faehrt und somit mit sich selbst kollidieren wuerde
             {
                 _direction = Vector2.down;  // setzt die Bewegungsrichtung nach unten
             }
 
-        } else if(Input.GetKeyDown(KeyCode.D))  // Prüft den Tastendruck D 
+        } else if(keyboard.dKey.wasPressedThisFrame || keyboard.rightArrowKey.wasPressedThisFrame)  // Prueft den Tastendruck D oder Pfeil nach rechts
         {
-            if (_direction != Vector2.left) // Prüft, dass die Schlange nicht in die entgegengesetzte Richtung fährt und somit mit sich selbst kollidieren würde
+            if (_direction != Vector2.left) // Prueft, dass die Schlange nicht in die entgegengesetzte Richtung faehrt und somit mit sich selbst kollidieren wuerde
             {
                 _direction = Vector2.right; // setzt die Bewegungsrichtung nach rechts
             }
 
-        } else if (Input.GetKeyDown(KeyCode.A)) // Prüft den Tastendruck A
+        } else if (keyboard.aKey.wasPressedThisFrame || keyboard.leftArrowKey.wasPressedThisFrame) // Prueft den Tastendruck A oder Pfeil nach links
         {
-            if (_direction != Vector2.right)    // Prüft, dass die Schlange nicht in die entgegengesetzte Richtung fährt und somit mit sich selbst kollidieren würde
+            if (_direction != Vector2.right)    // Prueft, dass die Schlange nicht in die entgegengesetzte Richtung faehrt und somit mit sich selbst kollidieren wuerde
             {
                 _direction = Vector2.left;  // setzt die Bewegungsrichtung nach links
             }
         }
         }
-
-
     private void FixedUpdate()  // wird in regelmäßigen Abständen ausgeführt
     {
         for (int i = _segments.Count -1; i > 0; i--)            // wiederholt die Anweisung in absteigender Reheinfolge für alle Schlangen Segmente
