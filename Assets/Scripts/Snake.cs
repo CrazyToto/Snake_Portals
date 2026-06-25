@@ -87,15 +87,18 @@ public class Snake : MonoBehaviour  //Klasse Snake
             Destroy(_segments[i].gameObject);   // löscht das Schlangenteil
         }
 
-        _segments.Clear();  // löscht die Liste der Schlangenteile
-        _segments.Add(this.transform);  // fügt das Schlangenteil der Liste hinzu
+        this.transform.position = new Vector3(-12, 0, 0);
 
-        for (int i = 1; i < this.initialSize; i++)  // wiederholt die Anweisung für die Anzahl der Schlangenteile
+        _segments.Clear();
+        _segments.Add(this.transform);
+
+        for (int i = 1; i < this.initialSize; i++)
         {
-            _segments.Add(Instantiate(this.segmentPrefab)); // erstellt ein neues Schlangenteil
+            Transform segment = Instantiate(this.segmentPrefab);
+            segment.position = this.transform.position;
+            _segments.Add(segment);
         }
 
-        this.transform.position = Vector3.zero; // setzt die Position des Schlangenkopfes auf 0
     }
 
     private void ResetScore()           // Funktion um Score auf 0 zu setzen
@@ -166,6 +169,11 @@ public class Snake : MonoBehaviour  //Klasse Snake
         {
             Teleport(); //ruft die Funktion Teleport auf
                         //Das ist für extra level = leicht
+        }
+        else if (other.tag == "Portal")   // Prüft ob die Schlange gegen ein Portal stößt
+        {
+            Portal portal = other.GetComponent<Portal>(); // Holt die Portal-Komponente des anderen Objekts
+            this.transform.position = portal.TeleportPosition(); // Setzt die Position der Schlange auf die Position des Zielportals
         }
     }
  
