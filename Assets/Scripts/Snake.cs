@@ -8,8 +8,10 @@ public class Snake : MonoBehaviour  //Klasse Snake
 {
     private Vector2 _direction = Vector2.right; // Variable für die Bewegungsrichtung der Schlange
     private List<Transform> _segments = new List<Transform>();  // Liste für die Schlangenteile
+    private bool canTeleport = true; // Variable für die Teleport-Funktion
     public Transform segmentPrefab; // Variable für das Schlangenteil
     public int initialSize = 4; // Variable für die Anzahl der Schlangenteile
+
 
 
     private void Start()    // wird einmalig beim Start des Spiels ausgeführt
@@ -173,10 +175,23 @@ public class Snake : MonoBehaviour  //Klasse Snake
         else if (other.tag == "Portal")   // Prüft ob die Schlange gegen ein Portal stößt
         {
             Portal portal = other.GetComponent<Portal>(); // Holt die Portal-Komponente des anderen Objekts
-            this.transform.position = portal.TeleportPosition(); // Setzt die Position der Schlange auf die Position des Zielportals
+           
+            if (portal != null && portal.targetPortal != null)
+            {
+                canTeleport =false; // Deaktiviert die Teleport-Funktion, um sofortiges Zurückteleportieren zu verhindern
+                this.transform.position = portal.TeleportPosition(); // Setzt die Position der Schlange auf die Position des Zielportals
+
+            }
         }
     }
  
+    private void OnTriggerExit2D(Collider2D other) //Funktion welche aufgerufen wird, wenn die Schlange ein anderes Objekt verlässt
+    {
+        if (other.tag == "Portal")   // Prüft ob die Schlange ein Portal verlässt
+        {
+            canTeleport = true;  // Aktiviert die Teleport-Funktion wieder
+        }
+    }
 
 }
 
