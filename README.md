@@ -1,5 +1,5 @@
 # Snake
-This Pojekt is a Snake Game, made with Unity and C#
+This Pojekt is a Snake Portal Game, made with Unity and C#
 
 ## Description
 This Game was made for a school Projekt, but is publicly available to install on your Pc. For the Instalation guide see underneath. 
@@ -7,7 +7,6 @@ This Game was made for a school Projekt, but is publicly available to install on
 ## Contributors
  - [tom4rn](https://github.com/tom4rn)
  - [CrazyToto](https://github.com/CrazyToto)
- - [NawWay](https://github.com/NawWay)
 
 ## Instalation Guide
  - open your terminal (Win+R and put "cmd.exe" in the promt)
@@ -18,19 +17,17 @@ This Game was made for a school Projekt, but is publicly available to install on
    ```
  - wait until it is installed then type:
    ```Bach
-   git clone https://github.com/CrazyToto/Snake_Final_Repo.git
+   git clone https://github.com/CrazyToto/Snake_Portals.git
    ```
    
 #### Another way is this: 
- [Click here](https://github.com/CrazyToto/Snake_Final_Repo) to get to my Account > click the green Button > download as Zip
+ [Click here](https://github.com/CrazyToto/Snake_Portals) to get to my Account > click the green Button > download as Zip
 
 ## Usage
 After this you can copy all the files to another folder and edit the data how you like it, or if you have any idea you would want to change on this Projekt just open a new Issue and we can talk about that
 
-After our release you can alsways download the game without al the uneccesery data under [Releases](https://github.com/CrazyToto/Snake_Final_Repo/releases)
+After our release you can alsways download the game without al the uneccesery data under [Releases](https://github.com/CrazyToto/Snake_Portals/releases)
 
 ## Movement
-In the game you can move by unsing the "WASD" Buttons on you keyboard. use them to change the direction of your Snake. The Snake hgoes forward by it self so you don´t have to worry about that
-
-
-TEST1
+In the game you can move by unsing the "WASD" Buttons on you keyboard. Use them to change the direction of your Snake. The Snake goes forward by it self so you don´t have to worry about that. 
+By clicking the left/right mous button you can place the place the two portals on the board
