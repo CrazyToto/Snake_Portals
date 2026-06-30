@@ -1,39 +1,81 @@
-using System.Collections;           //Impotiert Lybarys
-using System.Collections.Generic;   //
-using UnityEngine;                  //Lybary für Unity 
+using UnityEngine;
 
-public class Apple : MonoBehaviour   //Klasse Apple // MonoBehviour für Implementierung in Unity mit Start und Setup Funktionen
+public class Apple : MonoBehaviour
 {
-  public BoxCollider2D gridArea;    //Variable gridArea vom Typ BoxCollider2D, dies ist die Triggerbox
-    public int score;   //Variable score vom Typ int
+    // Bereich, in dem der Apfel zufaellig erscheinen darf.
+    public BoxCollider2D gridArea;
 
+    // Punkte dieses Apfels; der eigentliche Gesamt-Score liegt im ScoreManager.
+    public int score;
 
-    private void Start() // wird beim Start des Programms einmal ausgeführt
+    // Radius, mit dem geprueft wird, ob an einer Spawn-Position schon etwas liegt.
+    public float collisionCheckRadius = 0.25f;
+
+    // Auf diesen Objekten darf der Apfel nicht erscheinen.
+    private readonly string[] _blockedSpawnTags = { "Wall", "Obstacle", "Portal", "Player" };
+
+    private void Start()
     {
-      RandomizePosition(); // Funktion für das Setzten der Position des Essen
-        score = 0;  // legt den Startwert des Scores fest
-    }
-    private void RandomizePosition() // Funktion für das Setzten der Position des Essen
-    {
-        Bounds bounds = this.gridArea.bounds;   // legt die Grenzen des Spawnfeldes fest
-
-        float x = Random.Range(bounds.min.x, bounds.max.x); // legt die x-Position auf einen zufälligen Wert im Rahmen fest
-        float y = Random.Range(bounds.min.y, bounds.max.y); // legt die y-Position auf einen zufälligen Wert im Rahmen fest
-
-        this.transform.position = new Vector3(Mathf.Round(x),Mathf.Round(y), 0.0f); // legt die Position fest;
-                                                                                    // Mathf.Round rundet die Ergebnisse, sodass die Blöcke alle
-                                                                                    // auf dem Koordinatensystem auf gleicher Höhe sind
-    
-    
+        // Beim Start wird der Apfel direkt auf ein freies Feld gesetzt.
+        RandomizePosition();
+        score = 0;
     }
 
+    private void RandomizePosition()
+    {
+        Bounds bounds = gridArea.bounds;
 
-
-    private void OnTriggerEnter2D(Collider2D other) // Funktion für die Kollision mit dem Schlangenkopf; wird ausgeführt bei Kollision des Box Collider
-    {   if (other.tag == "Player") // wenn das Objekt mit dem kollidiert wird den Tag Player hat, diesen hat der Schlangenkopf
+        // Es werden mehrere zufaellige Positionen probiert, bis ein freies Feld gefunden wird.
+        for (int i = 0; i < 100; i++)
         {
-            RandomizePosition(); // erscheint das Essen wieder an einem neuen Ort 
-            score = score + 1;  // der Score wird um 1 erhöht
+            float x = Random.Range(bounds.min.x, bounds.max.x);
+            float y = Random.Range(bounds.min.y, bounds.max.y);
+
+            // Die Position wird gerundet, damit der Apfel genau auf dem Snake-Raster liegt.
+            Vector3 spawnPosition = new Vector3(Mathf.Round(x), Mathf.Round(y), 0.0f);
+
+            if (!IsBlockedSpawnPosition(spawnPosition))
+            {
+                // Nur freie Positionen werden als neue Apfelposition uebernommen.
+                transform.position = spawnPosition;
+                return;
+            }
+        }
+    }
+
+    private bool IsBlockedSpawnPosition(Vector3 position)
+    {
+        // Alle Collider in der Naehe der moeglichen Spawn-Position werden gesucht.
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(position, collisionCheckRadius);
+
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            // Der eigene Collider des Apfels zaehlt nicht als Hindernis.
+            if (colliders[i].gameObject == gameObject)
+            {
+                continue;
+            }
+
+            for (int j = 0; j < _blockedSpawnTags.Length; j++)
+            {
+                // Wenn dort Wand, Portal oder Schlange liegt, ist das Feld blockiert.
+                if (colliders[i].CompareTag(_blockedSpawnTags[j]))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            // Wenn die Schlange den Apfel frisst, wird ein neuer Apfel gespawnt.
+            RandomizePosition();
+            score = score + 1;
         }
     }
 }

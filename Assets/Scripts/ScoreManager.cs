@@ -1,26 +1,37 @@
-using System.Collections;           //impotiert Lybarys
-using System.Collections.Generic;   //
-using UnityEngine;                  //
-using UnityEngine.UI;               //
+using UnityEngine;
+using UnityEngine.UI;
 
-public class ScoreManager : MonoBehaviour //Klasse ScoreManager
+public class ScoreManager : MonoBehaviour
 {
-    public Text scoreText;                                       // sagt unity welchen Text zu benutzen
-    public static int scoreCount;                                // Static variable um den Score zu speichern
-    public Text highscoreText;                                   // sagt unity welchen Text zu benutzen
-    public static int highscoreCount;                            // Static variable um den Highscore zu speichern
+    // Textfeld fuer den aktuellen Score.
+    public Text scoreText;
 
+    // Aktueller Score, statisch damit andere Skripte direkt darauf zugreifen koennen.
+    public static int scoreCount;
 
-    void Update()   //Update wird zu beginn jedes Frame aufgerufen
+    // Textfeld fuer den Highscore.
+    public Text highscoreText;
+
+    // Gespeicherter Highscore.
+    public static int highscoreCount;
+
+    private void Start()
     {
-        if(scoreCount > highscoreCount)                          // wenn der score größer ist als der highscore
-                                                                 // wird der score zum highscore
-        {                                                        //
-            highscoreCount = scoreCount;                         //
-            PlayerPrefs.SetInt("Highscore", highscoreCount);     //
+        // Der Highscore wird aus den Unity PlayerPrefs geladen.
+        highscoreCount = PlayerPrefs.GetInt("Highscore", 0);
+    }
+
+    private void Update()
+    {
+        // Wenn der aktuelle Score groesser ist, wird er als neuer Highscore gespeichert.
+        if (scoreCount > highscoreCount)
+        {
+            highscoreCount = scoreCount;
+            PlayerPrefs.SetInt("Highscore", highscoreCount);
         }
 
-        scoreText.text = "" + scoreCount;                 // Updatet den Score Text
-        highscoreText.text = "" + highscoreCount;     // Updatet den Highscore Text
-    } 
+        // Die Textfelder werden jedes Frame aktualisiert.
+        scoreText.text = "" + scoreCount;
+        highscoreText.text = "" + highscoreCount;
+    }
 }

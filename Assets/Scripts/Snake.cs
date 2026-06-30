@@ -1,231 +1,192 @@
-using System.Collections;                    //Impotiert Libarys
-using System.Collections.Generic;            //.
-using UnityEngine;     
+using UnityEngine;
 using UnityEngine.InputSystem;
 
-
-public class Snake : MonoBehaviour  //Klasse Snake
+public class Snake : MonoBehaviour
 {
-    private Vector2 _direction = Vector2.right; // Variable für die Bewegungsrichtung der Schlange
-    private List<Transform> _segments = new List<Transform>();  // Liste für die Schlangenteile
-    private bool canTeleport = true; // Variable für die Teleport-Funktion
-    public Transform segmentPrefab; // Variable für das Schlangenteil
-    public int initialSize = 4; // Variable für die Anzahl der Schlangenteile
+    // Aktuelle Bewegungsrichtung der Schlange.
+    private Vector2 _direction = Vector2.right;
 
+    // Die ganze Schlange wird als Kompositum verwaltet.
+    private SnakeComposite _snake;
 
+    // Zaehlt die Zeit seit dem letzten Schritt.
+    private float _moveTimer;
 
-    private void Start()    // wird einmalig beim Start des Spiels ausgeführt
+    // Prefab fuer neue Koerpersegmente.
+    public Transform segmentPrefab;
+
+    // Startlaenge der Schlange inklusive Kopf.
+    public int initialSize = 4;
+
+    // Anzahl der Raster-Schritte pro Sekunde.
+    public float movesPerSecond = 5.0f;
+
+    private void Start()
     {
-        ResetState();   // ruft die Funktion ResetState auf
+        // Beim Spielstart wird die Schlange aufgebaut.
+        ResetState();
     }
 
-    private void Update()   // wird am Anfang jedes Frames ausgefuehrt
+    private void Update()
     {
         Keyboard keyboard = Keyboard.current;
+
+        // Falls keine Tastatur vorhanden ist, wird keine Eingabe verarbeitet.
         if (keyboard == null)
         {
             return;
         }
 
-        if (keyboard.wKey.wasPressedThisFrame || keyboard.upArrowKey.wasPressedThisFrame)    // Prueft den Tastendruck W oder Pfeil nach oben
+        // Die Schlange darf nicht direkt in die Gegenrichtung fahren.
+        if (keyboard.wKey.wasPressedThisFrame || keyboard.upArrowKey.wasPressedThisFrame)
         {
-            if (_direction != Vector2.down) // Prueft, dass die Schlange nicht in die entgegengesetzte Richtung gedreht wird
-                                            // und somit mit sich selbst kollidieren wuerde
+            if (_direction != Vector2.down)
             {
-                _direction = Vector2.up;    // setzt die Bewegungsrichtung nach oben
-            }
-
-        } else if (keyboard.sKey.wasPressedThisFrame || keyboard.downArrowKey.wasPressedThisFrame) // Prueft den Tastendruck S oder Pfeil nach unten
-        {
-            if (_direction != Vector2.up)   // Prueft, dass die Schlange nicht in die entgegengesetzte Richtung faehrt und somit mit sich selbst kollidieren wuerde
-            {
-                _direction = Vector2.down;  // setzt die Bewegungsrichtung nach unten
-            }
-
-        } else if(keyboard.dKey.wasPressedThisFrame || keyboard.rightArrowKey.wasPressedThisFrame)  // Prueft den Tastendruck D oder Pfeil nach rechts
-        {
-            if (_direction != Vector2.left) // Prueft, dass die Schlange nicht in die entgegengesetzte Richtung faehrt und somit mit sich selbst kollidieren wuerde
-            {
-                _direction = Vector2.right; // setzt die Bewegungsrichtung nach rechts
-            }
-
-        } else if (keyboard.aKey.wasPressedThisFrame || keyboard.leftArrowKey.wasPressedThisFrame) // Prueft den Tastendruck A oder Pfeil nach links
-        {
-            if (_direction != Vector2.right)    // Prueft, dass die Schlange nicht in die entgegengesetzte Richtung faehrt und somit mit sich selbst kollidieren wuerde
-            {
-                _direction = Vector2.left;  // setzt die Bewegungsrichtung nach links
+                _direction = Vector2.up;
             }
         }
+        else if (keyboard.sKey.wasPressedThisFrame || keyboard.downArrowKey.wasPressedThisFrame)
+        {
+            if (_direction != Vector2.up)
+            {
+                _direction = Vector2.down;
+            }
         }
-    private void FixedUpdate()  // wird in regelmäßigen Abständen ausgeführt
+        else if (keyboard.dKey.wasPressedThisFrame || keyboard.rightArrowKey.wasPressedThisFrame)
+        {
+            if (_direction != Vector2.left)
+            {
+                _direction = Vector2.right;
+            }
+        }
+        else if (keyboard.aKey.wasPressedThisFrame || keyboard.leftArrowKey.wasPressedThisFrame)
+        {
+            if (_direction != Vector2.right)
+            {
+                _direction = Vector2.left;
+            }
+        }
+    }
+
+    private void FixedUpdate()
     {
-        for (int i = _segments.Count -1; i > 0; i--)            // wiederholt die Anweisung in absteigender Reheinfolge für alle Schlangen Segmente
+        // Solange die Schlange noch nicht aufgebaut ist, kann sie sich nicht bewegen.
+        if (_snake == null)
         {
-            _segments[i].position = _segments[i - 1].position;  // setzt für jedes Segment die Position auf die vorherige Position
-                                                                // des weiter vorne also näher am Schlangenkopf liegenden Segment
+            return;
         }
 
+        // Die Bewegung laeuft zeitgesteuert, damit der Slider die Geschwindigkeit regeln kann.
+        _moveTimer += Time.fixedDeltaTime;
+        float moveInterval = GetMoveInterval();
 
-
-        this.transform.position = new Vector3(                      // setzt die Position des Schlangenkopfes auf die neue Position
-            Mathf.Round(this.transform.position.x) + _direction.x,  // rundet die x-Koordinate auf die nächste ganze Zahl
-            Mathf.Round(this.transform.position.y) + _direction.y,  // rundet die y-Koordinate auf die nächste ganze Zahl
-            0.0f                                                    // die z-Koordinate ist auf 0, weil wir sie im 2D Spiel nicht benötigen
-            );
+        if (_moveTimer >= moveInterval)
+        {
+            // Das Kompositum bewegt Kopf und Segmente gemeinsam weiter.
+            _snake.MoveForward(_direction);
+            _moveTimer -= moveInterval;
+        }
     }
-    private void grow() // Funktion um mehrere Schlangenteile anzufügen
+
+    public void SetMovesPerSecond(float value)
     {
-        Transform segment = Instantiate(this.segmentPrefab);    // erstellt ein neues Schlangenteil
-        segment.position = _segments[_segments.Count - 1].position; // setzt die Position des neuen Schlangenteils auf die Position des letzten Schlangenteils
-        _segments.Add(segment); // fügt das neue Schlangenteil der Liste hinzu
-
-
+        // Mindestgeschwindigkeit ist 1, damit die Schlange nie komplett stehen bleibt.
+        movesPerSecond = Mathf.Max(1.0f, value);
     }
 
-    private void ResetState()   // Funktion um die Schlange zu resetten
+    private float GetMoveInterval()
     {
-        for (int i = 1; i < _segments.Count; i++)   // wiederholt die Anweisung für alle Schlangenteile
-        {
-            Destroy(_segments[i].gameObject);   // löscht das Schlangenteil
-        }
-
-        this.transform.position = new Vector3(-12, 0, 0);
-
-        _segments.Clear();
-        _segments.Add(this.transform);
-
-        for (int i = 1; i < this.initialSize; i++)
-        {
-            Transform segment = Instantiate(this.segmentPrefab);
-            segment.position = this.transform.position;
-            _segments.Add(segment);
-        }
-
+        // Aus Schritten pro Sekunde wird die Wartezeit zwischen zwei Schritten berechnet.
+        return 1.0f / Mathf.Max(1.0f, movesPerSecond);
     }
 
-    private void ResetScore()           // Funktion um Score auf 0 zu setzen
-    {                                   //
-        ScoreManager.scoreCount = 0;    //
-    }                                   //
-
-//--SEHR WICHTIG-- zum benutzden Tag von allen Wänden auf "Wall" stellen
-//----------------------------------------------------------------------
-    private void Teleport() // Funktion um die Schlange zu teleportieren
-    {   
-        if (_direction != Vector2.left) // Prüft ob die Schlange nicht nach links fährt
-        {
-            if (_direction != Vector2.right)    // Prüft ob die Schlange nicht nach rechts fährt
-            {
-                if (_direction != Vector2.up)   // Prüft ob die Schlange nicht nach oben fährt
-                {
-                    this.transform.position = new Vector3(  // setzt die Position des Schlangenkopfes auf die neue Position
-                        this.transform.position.x,  // setzt die x-Koordinate auf die aktuelle x-Koordinate
-                        this.transform.position.y * -1, // setzt die y-Koordinate auf die aktuelle y-Koordinate mal -1
-                        0.0f    // setzt die z-Koordinate auf 0
-                        );
-                }
-                else   // wenn die Schlange nach oben fährt
-                {
-                    this.transform.position = new Vector3(  // setzt die Position des Schlangenkopfes auf die neue Position
-                         this.transform.position.x, // setzt die x-Koordinate auf die aktuelle x-Koordinate
-                         this.transform.position.y * -1,    // setzt die y-Koordinate auf die aktuelle y-Koordinate mal -1
-                         0.0f   // setzt die z-Koordinate auf 0
-                         );
-                }
-            }
-            else   // wenn die Schlange nach rechts fährt
-            {
-                this.transform.position = new Vector3(  // setzt die Position des Schlangenkopfes auf die neue Position
-                     this.transform.position.x * -1,    // setzt die x-Koordinate auf die aktuelle x-Koordinate mal -1
-                     this.transform.position.y, // setzt die y-Koordinate auf die aktuelle y-Koordinate
-                     0.0f   // setzt die z-Koordinate auf 0
-                     );
-            }      
-        }
-        else  // wenn die Schlange nach links fährt
-        { 
-            this.transform.position = new Vector3(  // setzt die Position des Schlangenkopfes auf die neue Position
-                 this.transform.position.x * -1,    // setzt die x-Koordinate auf die aktuelle x-Koordinate mal -1
-                 this.transform.position.y, // setzt die y-Koordinate auf die aktuelle y-Koordinate
-                 0.0f   // setzt die z-Koordinate auf 0
-                 );
-        }
-    }
-
-
-
-    private void OnTriggerEnter2D(Collider2D other) //Funktion welche aufgerufen wird, wenn die Schlange mit einem anderen Objekt kollidiert
+    private void Grow()
     {
-        if (other.tag == "Apple")    // Prüft ob die Schlange auf ein Apfel stößt
-        {
-            grow(); // ruft die Funktion grow auf
-            ScoreManager.scoreCount += 1;   // addiert 1 zum Score
+        // Ein neues Segment entsteht an der Position des letzten Schlangenteils.
+        Transform segment = Instantiate(segmentPrefab);
+        segment.position = _snake.GetLastPart().Transform.position;
 
-        }
-        else if (other.tag == "Obstacle")   // Prüft ob die Schlange gegen ein Hindernis stößt
+        // Das neue Segment wird als Leaf zum Kompositum hinzugefuegt.
+        _snake.AddPart(new SnakeSegmentPart(segment));
+    }
+
+    private void ResetState()
+    {
+        if (_snake == null)
         {
-            ResetState();   //resettet die Schlange
-            ResetScore();   // resetet den Score
+            // Beim ersten Reset wird das Kompositum mit dem Kopf erstellt.
+            _snake = new SnakeComposite();
+            _snake.AddPart(new SnakeHeadPart(transform));
         }
-        else if (other.tag == "Wall")   // Prüft ob die Schlange gegen eine Wand stößt
+        else
         {
-            Teleport(); //ruft die Funktion Teleport auf
-                        //Das ist für extra level = leicht
+            // Bei spaeteren Resets werden nur die Koerpersegmente entfernt.
+            _snake.RemoveBodySegments();
         }
-        else if (other.tag == "Portal")   // Prüft ob die Schlange gegen ein Portal stößt
+
+        // Startposition und Startrichtung der Schlange.
+        _snake.MoveTo(new Vector3(-12, 0, 0));
+        _direction = Vector2.right;
+
+        // Nach einem Reset darf die Schlange sofort wieder loslaufen.
+        _moveTimer = GetMoveInterval();
+
+        // Die Startsegmente werden hinter dem Kopf aufgebaut.
+        for (int i = 1; i < initialSize; i++)
         {
-            Portal portal = other.GetComponent<Portal>(); // Holt die Portal-Komponente des anderen Objekts
-           
-            if (portal != null && portal.targetPortal != null)
+            Transform segment = Instantiate(segmentPrefab);
+            segment.position = transform.position;
+            _snake.AddPart(new SnakeSegmentPart(segment));
+        }
+    }
+
+    private void ResetScore()
+    {
+        // Der Score wird bei Kollision mit einem Hindernis zurueckgesetzt.
+        ScoreManager.scoreCount = 0;
+    }
+
+    private void Teleport()
+    {
+        // Bei einer Wand wird die Schlange auf die gegenueberliegende Seite gesetzt.
+        if (_direction == Vector2.left || _direction == Vector2.right)
+        {
+            _snake.MoveTo(new Vector3(transform.position.x * -1, transform.position.y, 0.0f));
+        }
+        else
+        {
+            _snake.MoveTo(new Vector3(transform.position.x, transform.position.y * -1, 0.0f));
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Apple"))
+        {
+            // Apfel eingesammelt: Schlange waechst und Score steigt.
+            Grow();
+            ScoreManager.scoreCount += 1;
+        }
+        else if (other.CompareTag("Obstacle"))
+        {
+            // Hindernis getroffen: Schlange und Score werden zurueckgesetzt.
+            ResetState();
+            ResetScore();
+        }
+        else if (other.CompareTag("Wall"))
+        {
+            // Wand bedeutet in diesem Spiel Teleport auf die andere Seite.
+            Teleport();
+        }
+        else if (other.CompareTag("Portal"))
+        {
+            Portal portal = other.GetComponent<Portal>();
+
+            if (portal != null)
             {
-                canTeleport =false; // Deaktiviert die Teleport-Funktion, um sofortiges Zurückteleportieren zu verhindern
-                this.transform.position = portal.TeleportPosition(); // Setzt die Position der Schlange auf die Position des Zielportals
-
+                // Beim Portal kommt die Schlange ein Feld hinter dem Zielportal heraus.
+                _snake.MoveTo(portal.TeleportPosition(_direction));
             }
         }
     }
- 
-    private void OnTriggerExit2D(Collider2D other) //Funktion welche aufgerufen wird, wenn die Schlange ein anderes Objekt verlässt
-    {
-        if (other.tag == "Portal")   // Prüft ob die Schlange ein Portal verlässt
-        {
-            canTeleport = true;  // Aktiviert die Teleport-Funktion wieder
-        }
-    }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

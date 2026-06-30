@@ -2,10 +2,18 @@ using UnityEngine;
 
 public class Portal : MonoBehaviour
 {
-    public Portal targetPortal; // Referenz auf das Zielportal
+    // Das Portal, zu dem dieses Portal fuehrt.
+    public Portal targetPortal;
 
-    public Vector3 TeleportPosition()
+    public Vector3 TeleportPosition(Vector2 exitDirection)
     {
-        return targetPortal.transform.position; // Gibt die Position des Zielportals zurück
+        // Ziel ist nicht die Portalmitte, sondern ein Feld hinter dem Zielportal.
+        // Dadurch wird die Schlange nicht sofort wieder zurueck teleportiert.
+        Vector3 targetPosition = targetPortal.transform.position;
+        return new Vector3(
+            targetPosition.x + exitDirection.x,
+            targetPosition.y + exitDirection.y,
+            targetPosition.z
+        );
     }
 }
