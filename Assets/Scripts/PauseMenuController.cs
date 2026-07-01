@@ -11,32 +11,28 @@ public class PauseMenuController : MonoBehaviour
 
     private GameObject _pausePanel;
     private Text _statusText;
+    private Button _openButton;
     private Button _pauseButton;
     private Button _resumeButton;
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void CreatePauseMenu()
-    {
-        if (_instance != null)
-        {
-            return;
-        }
-
-        GameObject controllerObject = new GameObject("PauseMenuController");
-        _instance = controllerObject.AddComponent<PauseMenuController>();
-    }
 
     private void Awake()
     {
         if (_instance != null && _instance != this)
         {
-            Destroy(gameObject);
+            Destroy(this);
             return;
         }
 
         _instance = this;
         IsPaused = false;
         Time.timeScale = 1.0f;
+
+        _openButton = GetComponent<Button>();
+        if (_openButton != null)
+        {
+            _openButton.onClick.AddListener(OpenPauseMenu);
+        }
+
         BuildPauseMenu();
     }
 
@@ -48,30 +44,10 @@ public class PauseMenuController : MonoBehaviour
             font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         }
 
-        GameObject canvasObject = new GameObject("Pause Menu Canvas");
-        canvasObject.transform.SetParent(transform, false);
-
-        Canvas canvas = canvasObject.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 100;
-
-        CanvasScaler canvasScaler = canvasObject.AddComponent<CanvasScaler>();
-        canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        canvasScaler.referenceResolution = new Vector2(1920, 1080);
-        canvasScaler.matchWidthOrHeight = 0.5f;
-
-        canvasObject.AddComponent<GraphicRaycaster>();
+        Transform menuParent = GetMenuParent();
         EnsureEventSystem();
 
-        Button openButton = CreateButton(canvasObject.transform, font, "Pause", new Vector2(150.0f, 54.0f));
-        RectTransform openRect = openButton.GetComponent<RectTransform>();
-        openRect.anchorMin = new Vector2(0.0f, 1.0f);
-        openRect.anchorMax = new Vector2(0.0f, 1.0f);
-        openRect.pivot = new Vector2(0.0f, 1.0f);
-        openRect.anchoredPosition = new Vector2(18.0f, -18.0f);
-        openButton.onClick.AddListener(ToggleMenu);
-
-        _pausePanel = CreatePanel(canvasObject.transform);
+        _pausePanel = CreatePanel(menuParent);
         _pausePanel.SetActive(false);
 
         Text titleText = CreateText(_pausePanel.transform, font, "Pausenmenue", 42, TextAnchor.MiddleCenter);
@@ -102,6 +78,28 @@ public class PauseMenuController : MonoBehaviour
         UpdateMenuState();
     }
 
+    private Transform GetMenuParent()
+    {
+        Canvas parentCanvas = GetComponentInParent<Canvas>();
+        if (parentCanvas != null)
+        {
+            return parentCanvas.transform;
+        }
+
+        GameObject canvasObject = new GameObject("Pause Menu Canvas");
+        Canvas canvas = canvasObject.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 100;
+
+        CanvasScaler canvasScaler = canvasObject.AddComponent<CanvasScaler>();
+        canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        canvasScaler.referenceResolution = new Vector2(1920, 1080);
+        canvasScaler.matchWidthOrHeight = 0.5f;
+
+        canvasObject.AddComponent<GraphicRaycaster>();
+        return canvasObject.transform;
+    }
+
     private void EnsureEventSystem()
     {
         if (EventSystem.current != null)
@@ -110,7 +108,6 @@ public class PauseMenuController : MonoBehaviour
         }
 
         GameObject eventSystemObject = new GameObject("EventSystem");
-        eventSystemObject.transform.SetParent(transform, false);
         eventSystemObject.AddComponent<EventSystem>();
         eventSystemObject.AddComponent<InputSystemUIInputModule>();
     }
@@ -180,28 +177,35 @@ public class PauseMenuController : MonoBehaviour
         return uiText;
     }
 
-    private void ToggleMenu()
+    public void OpenPauseMenu()
     {
-        bool shouldOpen = !_pausePanel.activeSelf;
-        _pausePanel.SetActive(shouldOpen);
+        _pausePanel.SetActive(true);
+        SetPaused(true);
+    }
 
-        if (shouldOpen)
+    public void TogglePauseMenu()
+    {
+        if (_pausePanel.activeSelf)
         {
-            SetPaused(true);
+            CloseMenu();
+        }
+        else
+        {
+            OpenPauseMenu();
         }
     }
 
-    private void CloseMenu()
+    public void CloseMenu()
     {
         _pausePanel.SetActive(false);
     }
 
-    private void PauseGame()
+    public void PauseGame()
     {
         SetPaused(true);
     }
 
-    private void ResumeGame()
+    public void ResumeGame()
     {
         SetPaused(false);
         CloseMenu();
@@ -234,6 +238,11 @@ public class PauseMenuController : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_openButton != null)
+        {
+            _openButton.onClick.RemoveListener(OpenPauseMenu);
+        }
+
         if (_instance == this)
         {
             IsPaused = false;
