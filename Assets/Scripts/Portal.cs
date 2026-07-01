@@ -5,6 +5,9 @@ public class Portal : MonoBehaviour
     // Das Portal, zu dem dieses Portal fuehrt.
     public Portal targetPortal;
 
+    // Solange true, darf dieses Portal nicht verschoben oder erneut benutzt werden.
+    public bool isBlocked;
+
     public Vector3 TeleportPosition(Vector2 exitDirection)
     {
         // Ziel ist nicht die Portalmitte, sondern ein Feld hinter dem Zielportal.

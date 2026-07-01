@@ -12,6 +12,12 @@ public class Snake : MonoBehaviour
     // Zaehlt die Zeit seit dem letzten Schritt.
     private float _moveTimer;
 
+    // Portalpaar, das gerade von der Schlange benutzt wird.
+    private Portal _blockedPortal;
+
+    // Anzahl der Bewegungsschritte, bis alle Segmente durch das Portal nachgezogen sind.
+    private int _portalBlockMovesRemaining;
+
     // Prefab fuer neue Koerpersegmente.
     public Transform segmentPrefab;
 
@@ -84,6 +90,7 @@ public class Snake : MonoBehaviour
         {
             // Das Kompositum bewegt Kopf und Segmente gemeinsam weiter.
             _snake.MoveForward(_direction);
+            UpdatePortalBlockAfterMove();
             _moveTimer -= moveInterval;
         }
     }
@@ -112,6 +119,8 @@ public class Snake : MonoBehaviour
 
     private void ResetState()
     {
+        ReleasePortalBlock();
+
         if (_snake == null)
         {
             // Beim ersten Reset wird das Kompositum mit dem Kopf erstellt.
@@ -159,6 +168,46 @@ public class Snake : MonoBehaviour
         }
     }
 
+    private void BlockPortalPair(Portal portal)
+    {
+        _blockedPortal = portal;
+        _portalBlockMovesRemaining = Mathf.Max(1, _snake.Count);
+
+        portal.isBlocked = true;
+        portal.targetPortal.isBlocked = true;
+    }
+
+    private void UpdatePortalBlockAfterMove()
+    {
+        if (_portalBlockMovesRemaining <= 0)
+        {
+            return;
+        }
+
+        _portalBlockMovesRemaining--;
+
+        if (_portalBlockMovesRemaining <= 0)
+        {
+            ReleasePortalBlock();
+        }
+    }
+
+    private void ReleasePortalBlock()
+    {
+        if (_blockedPortal != null)
+        {
+            _blockedPortal.isBlocked = false;
+
+            if (_blockedPortal.targetPortal != null)
+            {
+                _blockedPortal.targetPortal.isBlocked = false;
+            }
+        }
+
+        _blockedPortal = null;
+        _portalBlockMovesRemaining = 0;
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Apple"))
@@ -182,10 +231,13 @@ public class Snake : MonoBehaviour
         {
             Portal portal = other.GetComponent<Portal>();
 
-            if (portal != null)
+            if (portal != null && portal.targetPortal != null && !portal.isBlocked)
             {
-                // Beim Portal kommt die Schlange ein Feld hinter dem Zielportal heraus.
-                _snake.MoveTo(portal.TeleportPosition(_direction));
+                // Beide verbundenen Portale bleiben blockiert, bis die Segmente nachgezogen sind.
+                BlockPortalPair(portal);
+
+                // Nur der Kopf wird teleportiert. Die Segmente folgen Schritt fuer Schritt nach.
+                _snake.MoveHeadTo(portal.TeleportPosition(_direction));
             }
         }
     }

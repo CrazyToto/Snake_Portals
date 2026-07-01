@@ -44,6 +44,12 @@ public class SnakeComposite : ISnakePart
         }
     }
 
+    public void MoveHeadTo(Vector3 position)
+    {
+        // Nur der Kopf wird bewegt, die Segmente bleiben an ihrer Position.
+        _parts[0].MoveTo(position);
+    }
+
     public void MoveForward(Vector2 direction)
     {
         // Jedes Segment geht auf die vorherige Position seines Vorgaengers.

@@ -54,6 +54,14 @@ public class PortalMousePlacer : MonoBehaviour
             return;
         }
 
+        Portal portalComponent = portal.GetComponent<Portal>();
+
+        // Ein Portal, das gerade von der Schlange benutzt wird, darf nicht versetzt werden.
+        if (portalComponent != null && portalComponent.isBlocked)
+        {
+            return;
+        }
+
         Vector2 screenPosition = mouse.position.ReadValue();
 
         // Bildschirmposition der Maus wird in eine Position in der Spielwelt umgerechnet.
