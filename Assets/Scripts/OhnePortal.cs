@@ -4,7 +4,10 @@ using UnityEngine.UI;
 public class OhnePortal : MonoBehaviour
 {
     private Portal[] _portals;
+    public GameObject[] middleWalls;
+    public GameObject[] centralWalls;
     private PortalMousePlacer _portalMousePlacer;
+    public BoxCollider2D portalBlocker;
 
     private void Start()
     {
@@ -38,6 +41,27 @@ public class OhnePortal : MonoBehaviour
         if (_portalMousePlacer != null)
         {
             _portalMousePlacer.gameObject.SetActive(false);
+        }
+
+        foreach (GameObject wall in middleWalls)
+        {
+            if (wall != null)
+            {
+                wall.SetActive(false);
+            }
+        }
+
+        foreach (GameObject wall in centralWalls)
+        {
+            if (wall != null)
+            {
+                wall.SetActive(true);
+            }
+        }
+
+        if (portalBlocker != null)
+        {
+            portalBlocker.enabled = false;
         }
     }
 }
