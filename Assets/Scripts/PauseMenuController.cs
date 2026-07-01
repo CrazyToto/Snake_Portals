@@ -182,7 +182,13 @@ public class PauseMenuController : MonoBehaviour
 
     private void ToggleMenu()
     {
-        _pausePanel.SetActive(!_pausePanel.activeSelf);
+        bool shouldOpen = !_pausePanel.activeSelf;
+        _pausePanel.SetActive(shouldOpen);
+
+        if (shouldOpen)
+        {
+            SetPaused(true);
+        }
     }
 
     private void CloseMenu()
