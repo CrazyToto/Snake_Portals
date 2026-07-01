@@ -35,6 +35,11 @@ public class Snake : MonoBehaviour
 
     private void Update()
     {
+        if (PauseMenuController.IsPaused)
+        {
+            return;
+        }
+
         Keyboard keyboard = Keyboard.current;
 
         // Falls keine Tastatur vorhanden ist, wird keine Eingabe verarbeitet.
@@ -77,7 +82,7 @@ public class Snake : MonoBehaviour
     private void FixedUpdate()
     {
         // Solange die Schlange noch nicht aufgebaut ist, kann sie sich nicht bewegen.
-        if (_snake == null)
+        if (_snake == null || PauseMenuController.IsPaused)
         {
             return;
         }

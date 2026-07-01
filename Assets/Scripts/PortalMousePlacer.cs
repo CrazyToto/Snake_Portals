@@ -26,6 +26,11 @@ public class PortalMousePlacer : MonoBehaviour
 
     private void Update()
     {
+        if (PauseMenuController.IsPaused)
+        {
+            return;
+        }
+
         Mouse mouse = Mouse.current;
 
         // Ohne Maus, Kamera oder bei UI-Klicks soll kein Portal bewegt werden.
